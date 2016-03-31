@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8"/>  
+	<meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+    <title>手机端下拉分页异步加载数据</title>
+	<link rel="stylesheet" type="text/css" href="css/style.css"/>
+
+	<script src="js/jquery-1.9.1.min.js"></script>
+	<script src="js/jquery.pagination.js"></script>
+</head>
+<body>
+	<div id="test" class="p_container">
+		<div class="i_container">
+			<div class="p_lists">
+
+				<!-- 数据循环 - begin -->
+				<!--<div class="numSingle">
+					<div class="rowContainer">
+						<div class="col-2">18911594604</div>
+						<div class="col-1">价:200元</div>
+						<div class="col-1">预:500元</div>
+						<div class="col-1">低:100元</div>
+					</div>
+				</div>-->
+				<!-- 数据循环 - end -->
+
+			</div>
+			<div class="dropTip"></div>
+		</div>
+	</div>
+
+	<button id="a">获取当前页</button>
+	<button id="b">获取当前已经加载条数</button>
+
+</body>
+<script>
+
+	$(function(){
+
+		var page = new pagination('test',{
+			num:5,
+			pageCurrent:1,
+			pageAll:0,
+			ajaxEvent:function(me){
+				$.ajax({
+	                type: 'POST',
+	                url: 'server.php',
+	                data:{
+	                	current:me.params.pageCurrent, //需要的数据通过me.params来调用
+	                	numShow:me.params.num
+	                },
+	                dataType: 'json',
+	                cache:false,
+	                beforeSend:function(){
+	                	me.loadingTip(me);
+	                },
+	                success: function(data){
+	                    var result = '';
+	                    me.params.pageCurrent++;
+	                    me.params.pageAll = data.pageNum;
+
+
+	                    if(me.params.pageCurrent-1 == me.params.pageAll || me.params.pageCurrent-1 < me.params.pageAll){
+	                
+	                    	for(var i = 0; i < data.lists.length; i++){
+		                        result += '<div class="numSingle"><div class="rowContainer t2"><div class="col-2 phoneNum">'+data.lists[i].phoneNum+'</div><div class="col-1">价:'+data.lists[i].price+'元</div><div class="col-1">预:'+data.lists[i].yuPrice+'元</div><div class="col-1">低:'+data.lists[i].diPrice+'元</div></div></div>';
+		                    }
+		                    //回传加载数据的最后一页个数，以便插件获取当前已经加载数据条数 -- 必需
+	                    	me.params.lastCount = data.lists.length;
+
+
+		                    // 为了测试，延迟1秒加载
+		                    setTimeout(function(){
+		                        $('.p_lists').append(result);
+
+			                    //重置
+			                    //判断重置是否需要
+			                    if(me.params.pageCurrent-1 < me.params.pageAll){
+			                    	me.resetData();
+			                    }
+			                    
+			                    
+			                    if(me.params.pageCurrent > me.params.pageAll){
+			                    	//alert('后端数据个数过量，不符合前端请求个数');
+			                    	// 无数据
+					                me.noDataTip(me);
+			                    }
+			                    
+		                    },1000);
+
+
+		                    _flag = true;//解决scroll多次执行事件BUG，不能丢
+
+	                    }      
+
+	                    
+	                },
+	                error: function(xhr, type){
+	                    alert('Ajax error!');
+	                }
+	            });
+			}
+		});
+
+		
+		$('#a').click(function(){
+			alert(page.currentPage());
+		});
+
+		$('#b').click(function(){
+			alert(page.currentCount());
+		});
+	
+	
+	});
+</script>
+</html>
